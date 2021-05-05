@@ -1,0 +1,21 @@
+#!/usr/bin/env node
+'use strict';
+
+const { version } = require('../package.json')
+const program = require('commander');
+const { run } = require('../index.js')
+
+program
+  .version(version)
+
+program
+  .command('init')
+  .description('初始化命令')
+  .option('-u, --user [user]', 'AMC账号')
+  .option('-p, --password [password]', 'AMC密码')
+  .action(({ user, password }) => {
+    run && run(user, password)
+  })
+
+program
+  .parse(process.argv);

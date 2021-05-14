@@ -1,7 +1,6 @@
 const fs = require('fs');
 const child_process = require("child_process");
 const chalk = require('chalk')
-const { setData } = require('./lib/store')
 const { createAppConfig } = require('./lib/http')
 const { setUserInfo, loginByAppConfig } = require('./lib/user')
 const { inquirerHandle, getNewAppApplyInfo, createAppConfigParmas } = require('./lib/utils');
@@ -35,11 +34,11 @@ const getHsbAppTemplate = () => {
       choices: config.TEMPLATE_LIST
     },
   ], async (answer) => {
-    const err = await dowmloadTemplate({
+    const error = await dowmloadTemplate({
       projectName: answer.projectName,
       projectType: answer.projectType
     })
-    if (err) {
+    if (error) {
       console.log(chalk.red(error))
     } else {
       console.log(chalk.green('✨ 项目创建成功'))
@@ -74,21 +73,15 @@ const createDevopsAppInfo = (beseInfo = {}) => {
       if (devopsName) {
         // 登录AMC并写入用户信息
         await setUserInfo()
-        const token = await loginByAppConfig()
-        if (!token) throw new Error('应用配置后台登录失败')
-        setData('jkDevopsInfo', { token })
-        const { app_key: appKey = '' } = await createAppConfig(createAppConfigParmas(devopsName))
+        await loginByAppConfig()
+        const { app_key: appKey } = await createAppConfig(createAppConfigParmas(devopsName))
         console.log(chalk.green('✨ 应用信息配置成功'))
         // 更新package.json、hsb.devops.json文件
         await updateConfigFiles({ ...beseInfo, devopsName, appKey })
         // 查询应用配置后台是否有该应用信息
-        const isExist = await checkApp(devopsName)
-        if (isExist) {
-          console.log(chalk.yellow(`应用：${devopsName} 已存在`))
-        } else {
-          console.log(chalk.yellow(getNewAppApplyInfo(devopsName)))
-          openDevopsAdmin()
-        }
+        await checkApp(devopsName)
+        console.log(chalk.yellow(getNewAppApplyInfo(devopsName)))
+        await openDevopsAdmin()
       }
     } catch (error) {
       console.log(chalk.red(error))
@@ -112,13 +105,14 @@ const updateConfigFiles = (beseInfo = {}) => {
     deployName: beseInfo.devopsName,
     scripts: {
       ...oldPackageJson.scripts,
-      devops: "hsb-devops-move init"
+      devops: 'hsb-devops-move init'
     }
   }
   beseInfo.appKey && (parmas.scripts['devops-key'] = `hsb-devops-move init -k ${beseInfo.appKey}`)
   const newPackage = Object.assign({}, oldPackageJson, parmas)
+  const newDevops = Object.assign({}, config.BASE_DEVOPS_ORDER_INFO, { ORDER: { app_name: parmas.deployName, cdn_upload_dir: `/${parmas.deployName}/` } })
   fs.writeFileSync(`${process.cwd()}/${beseInfo.projectName}/package.json`, JSON.stringify(newPackage, null, 2), { encoding: 'utf-8' })
-  fs.writeFileSync(`${process.cwd()}/${beseInfo.projectName}/hsb.devops.json`, JSON.stringify(config.BASE_DEVOPS_ORDER_INFO, null, 2), { encoding: 'utf-8' })
+  fs.writeFileSync(`${process.cwd()}/${beseInfo.projectName}/hsb.devops.json`, JSON.stringify(newDevops, null, 2), { encoding: 'utf-8' })
 }
 
 /*

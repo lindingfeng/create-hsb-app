@@ -16,7 +16,7 @@ const config = {
   MSG_TYPE: 'request',
   REMARK: '',
   TIMESTAMPS: '',
-  HSB_TEMPLATE_GIT: 'https://lindingfeng:wsjj003.@github.com/lindingfeng/hsb_web_template.git',
+  HSB_TEMPLATE_GIT: 'http://release:P3QpfySsS6lFYN4HPGnU@gitlab.huishoubao.com/web_team/ziyou/hsb_web_template.git',
   DEVOPS_ADMIN: 'http://devops.huishoubao.com/admin/#',
   TEMPLATE_LIST: [
     { name: '移动端', value: 'h5' },
